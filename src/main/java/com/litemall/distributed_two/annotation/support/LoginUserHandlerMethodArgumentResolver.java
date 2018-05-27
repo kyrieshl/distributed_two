@@ -2,15 +2,22 @@ package com.litemall.distributed_two.annotation.support;
 
 import com.litemall.distributed_two.annotation.LoginUser;
 import com.litemall.distributed_two.service.UserTokenManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-
+@Component
 public class LoginUserHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
-    public static final String LOGIN_TOKEN_KEY = "X-Litemall-Token";
+
+    @Autowired
+    private UserTokenManager userTokenManager;
+
+    public final static String LOGIN_TOKEN_KEY = "X-Litemall-Token";
+
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.getParameterType().isAssignableFrom(Integer.class)&&parameter.hasParameterAnnotation(LoginUser.class);
@@ -26,6 +33,6 @@ public class LoginUserHandlerMethodArgumentResolver implements HandlerMethodArgu
             return null;
         }
 
-        return UserTokenManager.getUserId(token);
+        return userTokenManager.getUserId(token);
     }
 }

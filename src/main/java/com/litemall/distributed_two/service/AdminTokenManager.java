@@ -1,26 +1,28 @@
 package com.litemall.distributed_two.service;
 
-import com.litemall.distributed_two.dao.AdminToken;
+import org.linlinjava.litemall.db.domain.AdminToken;
 import org.linlinjava.litemall.db.util.CharUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
+@Service
 public class AdminTokenManager {
-    private static Map<String, AdminToken> tokenMap = new HashMap<>();
-    private static Map<Integer, AdminToken> idMap = new HashMap<>();
 
-    public static Integer getUserId(String token) {
+    @Autowired
+    private RedisTemplate<String, Object> tokenRedisTemplate;
 
-        AdminToken userToken = tokenMap.get(token);
+    public Integer getUserId(String token) {
+
+        AdminToken userToken = (AdminToken) tokenRedisTemplate.opsForValue().get(token);
         if(userToken == null){
             return null;
         }
 
         if(userToken.getExpireTime().isBefore(LocalDateTime.now())){
-            tokenMap.remove(token);
-            idMap.remove(userToken.getUserId());
+            tokenRedisTemplate.delete(token);
             return null;
         }
 
@@ -28,7 +30,7 @@ public class AdminTokenManager {
     }
 
 
-    public static AdminToken generateToken(Integer id){
+    public AdminToken generateToken(Integer id){
         AdminToken userToken = null;
 
 //        userToken = idMap.get(id);
@@ -38,7 +40,7 @@ public class AdminTokenManager {
 //        }
 
         String token = CharUtil.getRandomString(32);
-        while (tokenMap.containsKey(token)) {
+        while (tokenRedisTemplate.hasKey(token)) {
             token = CharUtil.getRandomString(32);
         }
 
@@ -50,8 +52,7 @@ public class AdminTokenManager {
         userToken.setUpdateTime(update);
         userToken.setExpireTime(expire);
         userToken.setUserId(id);
-        tokenMap.put(token, userToken);
-        idMap.put(id, userToken);
+        tokenRedisTemplate.opsForValue().set(token, userToken);
 
         return userToken;
     }

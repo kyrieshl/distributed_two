@@ -112,6 +112,7 @@ public class StorageController {
         return ResponseUtil.ok(data);
     }
 
+    //上传文件
     @PostMapping("/create")
     public Object upload(@RequestParam("file") MultipartFile multipartFile) {
         String fileName = multipartFile.getOriginalFilename();

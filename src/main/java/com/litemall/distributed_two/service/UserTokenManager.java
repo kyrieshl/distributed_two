@@ -1,27 +1,45 @@
 package com.litemall.distributed_two.service;
 
-import com.litemall.distributed_two.dao.UserToken;
+import org.linlinjava.litemall.db.domain.UserToken;
 import org.linlinjava.litemall.db.util.CharUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
+@Service
 public class UserTokenManager {
-    private static Map<String, UserToken> tokenMap = new HashMap<>();
-    private static Map<Integer, UserToken> idMap = new HashMap<>();
 
-    public static Integer getUserId(String token) {
+//    @Autowired
+//    private static RedisTemplate<String, Object> tokenRedisTemplate;
+//
+//    @Autowired
+//    private static RedisTemplate<String, Object> idRedisTemplate;
 
+//    private static Map<String, UserToken> tokenMap = new HashMap<>();
+//    private static Map<Integer, UserToken> idMap = new HashMap<>();
+//    @Resource
+//    private TokenRedis tokenRedis;
 
-        UserToken userToken = tokenMap.get(token);
+    @Autowired
+    private RedisTemplate<String,Object> tokenRedisTemplate;
+
+//    private static UserTokenManager factory;
+//
+//    @PostConstruct
+//    public void init() {
+//        factory = this;
+//    }
+
+    public  Integer getUserId(String token) {
+        UserToken userToken = (UserToken) tokenRedisTemplate.opsForValue().get(token);
         if(userToken == null){
             return null;
         }
 
         if(userToken.getExpireTime().isBefore(LocalDateTime.now())){
-            tokenMap.remove(token);
-            idMap.remove(userToken.getUserId());
+            tokenRedisTemplate.delete(token);
             return null;
         }
 
@@ -29,9 +47,8 @@ public class UserTokenManager {
     }
 
 
-    public static UserToken generateToken(Integer id){
+    public  UserToken generateToken(Integer id){
         UserToken userToken = null;
-
 //        userToken = idMap.get(id);
 //        if(userToken != null) {
 //            tokenMap.remove(userToken.getToken());
@@ -39,7 +56,7 @@ public class UserTokenManager {
 //        }
 
         String token = CharUtil.getRandomString(32);
-        while (tokenMap.containsKey(token)) {
+        while (tokenRedisTemplate.hasKey(token)) {
             token = CharUtil.getRandomString(32);
         }
 
@@ -51,8 +68,7 @@ public class UserTokenManager {
         userToken.setUpdateTime(update);
         userToken.setExpireTime(expire);
         userToken.setUserId(id);
-        tokenMap.put(token, userToken);
-        idMap.put(id, userToken);
+        tokenRedisTemplate.opsForValue().set(token,userToken);
 
         return userToken;
     }

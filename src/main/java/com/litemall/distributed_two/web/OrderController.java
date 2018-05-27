@@ -83,9 +83,40 @@ public class OrderController {
 
         if(OrderUtil.isPayStatus(zmallOrder) || OrderUtil.isShipStatus(zmallOrder)){
             LitemallOrder newOrder = new LitemallOrder();
+            String s = order.getShipChannel();
+            if(order.getShipChannel().equals("顺丰")){
+                s = "SF";
+            }
+            if (order.getShipChannel().equals("EMS")){
+                s = "EMS";
+            }
+            if(order.getShipChannel().equals("百世快递")){
+                s = "HTKY";
+            }
+            if(order.getShipChannel().equals("中通快递")){
+                s = "ZTO";
+            }
+            if(order.getShipChannel().equals("申通快递")){
+                s = "STO";
+            }
+            if(order.getShipChannel().equals("圆通快递")){
+                s = "YTO";
+            }
+            if(order.getShipChannel().equals("韵达快递")){
+                s = "YD";
+            }
+            if(order.getShipChannel().equals("邮政包裹")){
+                s = "YZPY";
+            }
+            if(order.getShipChannel().equals("天天快递")){
+                s = "HHTT";
+            }
+            if(order.getShipChannel().equals("京东物流")){
+                s = "JD";
+            }
             newOrder.setId(orderId);
-            newOrder.setShipChannel(order.getShipChannel());
-            newOrder.setShipSn(order.getOrderSn());
+            newOrder.setShipChannel(s);
+            newOrder.setShipSn(order.getShipSn());
             newOrder.setShipStartTime(order.getShipStartTime());
             newOrder.setShipEndTime(order.getShipEndTime());
             newOrder.setOrderStatus(OrderUtil.STATUS_SHIP);

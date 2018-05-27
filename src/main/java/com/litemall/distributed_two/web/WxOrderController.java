@@ -200,11 +200,13 @@ public class WxOrderController {
         List<Map<String, Object>> orderGoodsVoList = new ArrayList<>(orderGoodsList.size());
         for (LitemallOrderGoods orderGoods : orderGoodsList) {
             Map<String, Object> orderGoodsVo = new HashMap<>();
-            orderGoodsVo.put("id", orderGoods.getId());
+            orderGoodsVo.put("goodsId", orderGoods.getGoodsId());
             orderGoodsVo.put("goodsName", orderGoods.getGoodsName());
             orderGoodsVo.put("number", orderGoods.getNumber());
             orderGoodsVo.put("picUrl", orderGoods.getPicUrl());
+            orderGoodsVo.put("goodsPrice",orderGoods.getRetailPrice().multiply(BigDecimal.valueOf(orderGoods.getNumber())));
             orderGoodsVo.put("goodsSpecificationValues", orderGoods.getGoodsSpecificationValues());
+            orderGoodsVo.put("evaluateFlag",orderGoods.getEvaluateFlag());
             orderGoodsVoList.add(orderGoodsVo);
         }
 
@@ -298,35 +300,14 @@ public class WxOrderController {
         order.setOrderPrice(orderTotalPrice);
         order.setActualPrice(actualPrice);
 
-        // 订单商品
-        List<LitemallOrderGoods> orderGoodsList = new ArrayList<>(checkedGoodsList.size());
-        for (LitemallCart cartGoods : checkedGoodsList) {
-            LitemallOrderGoods orderGoods = new LitemallOrderGoods();
-            orderGoods.setOrderId(order.getId());
-            orderGoods.setGoodsId(cartGoods.getGoodsId());
-            orderGoods.setGoodsSn(cartGoods.getGoodsSn());
-            orderGoods.setProductId(cartGoods.getProductId());
-            orderGoods.setGoodsName(cartGoods.getGoodsName());
-            orderGoods.setPicUrl(cartGoods.getPicUrl());
-            orderGoods.setRetailPrice(cartGoods.getRetailPrice());
-            orderGoods.setNumber(cartGoods.getNumber());
-            orderGoods.setGoodsSpecificationIds(cartGoods.getGoodsSpecificationIds());
-            orderGoods.setGoodsSpecificationValues(cartGoods.getGoodsSpecificationValues());
-            orderGoodsList.add(orderGoods);
-        }
-
         // 开启事务管理
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
+
         try {
             // 添加订单表项
             orderService.add(order);
-
-            // 添加订单商品表项
-            for (LitemallOrderGoods orderGoods : orderGoodsList) {
-                orderGoodsService.add(orderGoods);
-            }
 
             // 删除购物车里面的商品信息
             cartService.clearGoods(userId);
@@ -349,6 +330,28 @@ public class WxOrderController {
             return ResponseUtil.fail(403, "下单失败");
         }
         txManager.commit(status);
+
+        // 订单商品
+        List<LitemallOrderGoods> orderGoodsList = new ArrayList<>(checkedGoodsList.size());
+        for (LitemallCart cartGoods : checkedGoodsList) {
+            LitemallOrderGoods orderGoods = new LitemallOrderGoods();
+            orderGoods.setOrderId(order.getId());
+            orderGoods.setGoodsId(cartGoods.getGoodsId());
+            orderGoods.setGoodsSn(cartGoods.getGoodsSn());
+            orderGoods.setProductId(cartGoods.getProductId());
+            orderGoods.setGoodsName(cartGoods.getGoodsName());
+            orderGoods.setPicUrl(cartGoods.getPicUrl());
+            orderGoods.setRetailPrice(cartGoods.getRetailPrice());
+            orderGoods.setNumber(cartGoods.getNumber());
+            orderGoods.setGoodsSpecificationIds(cartGoods.getGoodsSpecificationIds());
+            orderGoods.setGoodsSpecificationValues(cartGoods.getGoodsSpecificationValues());
+            orderGoodsList.add(orderGoods);
+        }
+
+        // 添加订单商品表项
+        for (LitemallOrderGoods orderGoods : orderGoodsList) {
+            orderGoodsService.add(orderGoods);
+        }
 
         Map<String, Object> data = new HashMap<>();
         data.put("orderId", order.getId());

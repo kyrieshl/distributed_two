@@ -131,10 +131,8 @@ public class StorageController {
             storageInfo.setModified(LocalDateTime.now());
             storageInfo.setKey(key);
             storageInfo.setUrl(url);
-            storageInfo.setKey(key);
-            storageInfo.setUrl(url);
             zmallStorageService.add(storageInfo);
-            return adress;
+            return ResponseUtil.ok(storageInfo);
         } catch (Exception e) {
             e.printStackTrace();
         }

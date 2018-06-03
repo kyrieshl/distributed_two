@@ -20,6 +20,7 @@ public class AdController {
 
     @Autowired
     private LitemallAdService adService;
+    sad
 
     @GetMapping("/list")
     public Object list(@LoginAdmin Integer adminId,
